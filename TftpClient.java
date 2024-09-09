@@ -30,6 +30,12 @@ public class TftpClient {
                 TftpPacket handledPacket = new TftpPacket(p);
 
                 byte reponseType = handledPacket.getType();
+
+                if (reponseType == 5) {
+                    System.out.println("All blocks received");
+                    break;
+                }
+
                 byte reponseBlockNumber = handledPacket.getBlockNumber();
                 byte[] reponseBlockData = handledPacket.getData();
 

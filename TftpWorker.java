@@ -76,7 +76,7 @@ public class TftpWorker {
          }
 
          byte[] finalPacketData = new byte[2];
-         finalPacketData[0] = DATA;
+         finalPacketData[0] = 5;
          finalPacketData[1] = (byte) (blocks.size() + 1);
 
          DatagramPacket finalPacket = new DatagramPacket(finalPacketData, 0, finalPacketData.length, clientAddress,
