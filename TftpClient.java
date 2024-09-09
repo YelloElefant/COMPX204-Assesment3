@@ -1,3 +1,4 @@
+import java.io.*;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
@@ -6,9 +7,17 @@ import java.util.Arrays;
 public class TftpClient {
     public static void main(String[] args) {
         try {
+            if (args.length != 1) {
+                System.err.println("Usage: java TftpClient <filename>");
+                System.exit(1);
+            }
+
+            // get file name
+            String filename = args[0];
+
             DatagramSocket ds = new DatagramSocket();
 
-            byte[] data = "test".getBytes();
+            byte[] data = filename.getBytes();
             byte type = 1;
             byte[] message = new byte[data.length + 1];
             message[0] = type;
@@ -39,7 +48,15 @@ public class TftpClient {
                 byte reponseBlockNumber = handledPacket.getBlockNumber();
                 byte[] reponseBlockData = handledPacket.getData();
 
-                System.out.println(new String(reponseBlockData));
+                // write each response block to a file
+                try {
+                    File file = new File("received_" + filename);
+                    FileOutputStream fos = new FileOutputStream(file, true);
+                    fos.write(reponseBlockData);
+                    fos.close();
+                } catch (Exception e) {
+                    System.err.println("Exception: " + e);
+                }
 
                 // send back ACK
                 byte[] ackData = new byte[2];

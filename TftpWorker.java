@@ -11,6 +11,7 @@ public class TftpWorker {
    private static final byte RRQ = 1;
    private static final byte DATA = 2;
    private static final byte ACK = 3;
+   private static final byte END = 5;
    private static final byte ERROR = 4;
 
    private byte type;
@@ -76,7 +77,7 @@ public class TftpWorker {
          }
 
          byte[] finalPacketData = new byte[2];
-         finalPacketData[0] = 5;
+         finalPacketData[0] = END;
          finalPacketData[1] = (byte) (blocks.size() + 1);
 
          DatagramPacket finalPacket = new DatagramPacket(finalPacketData, 0, finalPacketData.length, clientAddress,
