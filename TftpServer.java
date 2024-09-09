@@ -6,6 +6,7 @@ public class TftpServer {
    private static int port = 69;
 
    public void start_server() {
+      int workerCounter = 0;
       try {
          DatagramSocket ds = new DatagramSocket(port);
          System.out.println("TftpServer on port " + port);
@@ -15,7 +16,7 @@ public class TftpServer {
             DatagramPacket p = new DatagramPacket(buf, 1472);
             ds.receive(p);
 
-            TftpWorker worker = new TftpWorker(p);
+            TftpWorker worker = new TftpWorker(p, workerCounter++);
             System.out.println("Worker created - for " + p.getAddress().toString().substring(1) + ":" + p.getPort()
                   + " - requesting "
                   + new String(worker.filename));

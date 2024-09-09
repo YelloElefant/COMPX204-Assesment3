@@ -13,13 +13,15 @@ public class TftpWorker {
    private static final byte ACK = 3;
    private static final byte END = 5;
    private static final byte ERROR = 4;
+   private String name = "TftpWorker";
 
    private byte type;
    private byte[] data;
    public String filename;
 
-   public TftpWorker(DatagramPacket req) {
+   public TftpWorker(DatagramPacket req, int number) {
       this.req = req;
+      this.name += number;
 
       this.type = req.getData()[0];
       this.data = GetDataFromPacket(req);
@@ -27,7 +29,7 @@ public class TftpWorker {
       filename = new String(data);
 
       if (this.type != RRQ) {
-         System.err.println("Invalid request type");
+         out("Invalid request type");
          return;
       }
 
@@ -70,7 +72,7 @@ public class TftpWorker {
             byte blockNumberClient = ackData[1];
 
             if (ackType != ACK) {
-               System.err.println("Invalid ack");
+               out("Invalid ack");
                return;
             }
             if (blockNumberClient != blockNumber) {
@@ -87,9 +89,10 @@ public class TftpWorker {
                clientPort);
 
          ds.send(finalPacket);
+         out("All blocks sent");
          ds.close();
       } catch (Exception e) {
-         System.err.println("Error sending blocks");
+         out("Error sending blocks");
       }
    }
 
@@ -101,7 +104,7 @@ public class TftpWorker {
          fis.close();
          return fileData;
       } catch (Exception e) {
-         System.err.println("Error reading file");
+         out("Error reading file");
          return null;
       }
 
@@ -141,6 +144,10 @@ public class TftpWorker {
       System.arraycopy(data, 0, packetData, 2, data.length);
 
       return new DatagramPacket(packetData, 0, packetData.length, address, port);
+   }
+
+   private void out(String s) {
+      System.out.println(name + ": " + s);
    }
 
 }
