@@ -16,6 +16,9 @@ public class TftpServer {
             ds.receive(p);
 
             TftpWorker worker = new TftpWorker(p);
+            System.out.println("Worker created - for " + p.getAddress().toString().substring(1) + ":" + p.getPort()
+                  + " - requesting "
+                  + new String(worker.filename));
             worker.run();
 
          }

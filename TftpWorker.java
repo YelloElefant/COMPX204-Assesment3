@@ -15,11 +15,15 @@ public class TftpWorker {
 
    private byte type;
    private byte[] data;
+   public String filename;
 
    public TftpWorker(DatagramPacket req) {
       this.req = req;
 
       this.type = req.getData()[0];
+      this.data = GetDataFromPacket(req);
+
+      filename = new String(data);
 
       if (this.type != RRQ) {
          System.err.println("Invalid request type");
@@ -29,10 +33,6 @@ public class TftpWorker {
    }
 
    public void run() {
-
-      this.data = GetDataFromPacket(req);
-
-      String filename = new String(data);
 
       byte[] fileData = ReadFile(filename);
 
@@ -56,7 +56,7 @@ public class TftpWorker {
 
             byte[] block = blocks.get(i);
 
-            DatagramPacket packet = MakePacket(type, blockNumber, block, clientAddress, clientPort);
+            DatagramPacket packet = MakePacket(DATA, blockNumber, block, clientAddress, clientPort);
 
             ds.send(packet);
 
