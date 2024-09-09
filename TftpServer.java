@@ -15,9 +15,8 @@ public class TftpServer {
             DatagramPacket p = new DatagramPacket(buf, 1472);
             ds.receive(p);
 
-            byte[] data = GetDataFromPacket(p);
-
-            System.out.println(new String(data));
+            TftpWorker worker = new TftpWorker(p);
+            worker.run();
 
          }
       } catch (Exception e) {
