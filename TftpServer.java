@@ -29,10 +29,6 @@ public class TftpServer {
       return;
    }
 
-   private byte[] GetDataFromPacket(DatagramPacket p) {
-      return Arrays.copyOfRange(p.getData(), 0, p.getLength());
-   }
-
    public static void main(String args[]) {
       TftpServer d = new TftpServer();
       d.start_server();

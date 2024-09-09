@@ -2,7 +2,7 @@ import java.io.*;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
-import java.util.Arrays;
+// import java.util.Arrays;
 
 public class TftpClient {
     public static void main(String[] args) {
@@ -66,20 +66,22 @@ public class TftpClient {
                 ds.send(ackPacket);
 
             }
-        } catch (Exception e) {
+            ds.close();
 
+        } catch (Exception e) {
+            System.err.println("Exception: " + e.getStackTrace());
         }
 
     }
 
-    private static byte HandleResponse(DatagramPacket p) {
-        byte[] data = p.getData();
-        byte type = data[0];
-        byte blockNumber = data[1];
-        byte[] blockData = Arrays.copyOfRange(data, 2, p.getLength());
+    // private static byte HandleResponse(DatagramPacket p) {
+    // byte[] data = p.getData();
+    // // byte type = data[0];
+    // byte blockNumber = data[1];
+    // byte[] blockData = Arrays.copyOfRange(data, 2, p.getLength());
 
-        // print each block
-        System.out.println(new String(blockData));
-        return blockNumber;
-    }
+    // // print each block
+    // System.out.println(new String(blockData));
+    // return blockNumber;
+    // }
 }

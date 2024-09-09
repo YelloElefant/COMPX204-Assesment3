@@ -84,7 +84,7 @@ public class TftpWorker {
                clientPort);
 
          ds.send(finalPacket);
-
+         ds.close();
       } catch (Exception e) {
          System.err.println("Error sending blocks");
       }
@@ -95,6 +95,7 @@ public class TftpWorker {
          File file = new File(filename);
          FileInputStream fis = new FileInputStream(file);
          byte[] fileData = fis.readAllBytes();
+         fis.close();
          return fileData;
       } catch (Exception e) {
          System.err.println("Error reading file");
