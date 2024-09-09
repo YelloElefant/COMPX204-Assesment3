@@ -69,9 +69,12 @@ public class TftpWorker {
             byte ackType = ackData[0];
             byte blockNumberClient = ackData[1];
 
-            if (ackType != ACK || blockNumberClient != blockNumber) {
+            if (ackType != ACK) {
                System.err.println("Invalid ack");
                return;
+            }
+            if (blockNumberClient != blockNumber) {
+               i--;
             }
 
          }
