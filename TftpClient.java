@@ -50,11 +50,11 @@ public class TftpClient {
                     } catch (SocketTimeoutException e) {
                         acksTimeOut++;
                         System.out.println("Server not responding... retrying acknoledgement");
-                        Respond(packet);
-                        if (acksTimeOut == 5) {
+                        if (acksTimeOut == 6) {
                             System.out.println("Server not responding");
                             return;
                         }
+                        Respond(packet);
                     }
                 }
 
