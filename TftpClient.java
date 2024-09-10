@@ -9,18 +9,25 @@ public class TftpClient {
     private static int port = 69;
     private static InetAddress serverAddress;
     private static String filename;
+    private static String saveLocation = "received_";
 
     public static void main(String[] args) {
         try {
-            // if (args.length != 1) {
-            // System.err.println("Usage: java TftpClient <filename>");
-            // System.exit(1);
-            // }
+            if (args.length > 2 || args.length < 1) {
+                System.err.println("Usage: java TftpClient <filename>");
+                System.exit(1);
+            }
 
-            // // get file name
-            // filename = args[0];
-            filename = "test";
+            // get file name
+            filename = args[0];
+            if (args.length == 2) {
+                saveLocation = args[1];
+            } else {
+                saveLocation += filename;
+            }
+
             System.out.println("Requesting file: " + filename);
+            System.out.println("Save location: " + saveLocation);
 
             ds = new DatagramSocket();
 
@@ -108,7 +115,7 @@ public class TftpClient {
         // write each response block to a file
         FileOutputStream fos = null;
         try {
-            File file = new File("received_" + filename);
+            File file = new File(saveLocation);
             fos = new FileOutputStream(file, true);
             fos.write(responseBlockData);
         } catch (Exception e) {
