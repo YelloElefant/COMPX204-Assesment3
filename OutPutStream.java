@@ -16,5 +16,6 @@ public class OutPutStream {
             System.out.print(String.format("\033[%dA", 1));
             System.out.print("\033[2K"); // Erase line content
         }
+        lineCount = 0;
     }
 }
