@@ -19,6 +19,10 @@ public class TftpWorker {
    private byte[] data;
    public String filename;
 
+   private DatagramSocket ds;
+   private InetAddress clientAddress;
+   private int clientPort;
+
    public TftpWorker(DatagramPacket req, int number) {
       this.req = req;
       this.name += number;
@@ -33,11 +37,33 @@ public class TftpWorker {
          return;
       }
 
+      try {
+         ds = new DatagramSocket();
+      } catch (Exception e) {
+         out("Error creating socket");
+         return;
+      }
+
+      clientAddress = req.getAddress();
+      clientPort = req.getPort();
+
    }
 
    public void run() {
 
-      byte[] fileData = ReadFile(filename);
+      byte[] fileData;
+
+      try {
+         fileData = ReadFile(filename);
+      } catch (FileNotFoundException e) {
+         out("File not found");
+         Respond(MakePacket(ERROR, new byte[] { (byte) 1 }, clientAddress, clientPort));
+         return;
+      } catch (Exception e) {
+         out("Error reading file");
+         Respond(MakePacket(ERROR, "Error reading file".getBytes(), clientAddress, clientPort));
+         return;
+      }
 
       List<byte[]> blocks = GetBlocks(fileData);
 
@@ -45,14 +71,18 @@ public class TftpWorker {
 
    }
 
+   private void Respond(DatagramPacket p) {
+      try {
+         ds.send(p);
+      } catch (Exception e) {
+         out("Error sending response");
+      }
+   }
+
    private void sendBlocks(List<byte[]> blocks) {
       // send each block and wait for a response before sending the next
 
       try {
-         DatagramSocket ds = new DatagramSocket(0);
-
-         InetAddress clientAddress = req.getAddress();
-         int clientPort = req.getPort();
 
          for (int i = 0; i < blocks.size(); i++) {
             byte blockNumber = (byte) (i + 1);
@@ -61,7 +91,7 @@ public class TftpWorker {
 
             DatagramPacket packet = MakePacket(DATA, blockNumber, block, clientAddress, clientPort);
 
-            ds.send(packet);
+            Respond(packet);
 
             byte[] ackData = new byte[2];
             DatagramPacket ackPacket = new DatagramPacket(ackData, 2);
@@ -76,7 +106,7 @@ public class TftpWorker {
                return;
             }
             if (blockNumberClient != blockNumber) {
-               i--;
+               i = blockNumberClient - 1;
             }
 
          }
@@ -88,7 +118,7 @@ public class TftpWorker {
          DatagramPacket finalPacket = new DatagramPacket(finalPacketData, 0, finalPacketData.length, clientAddress,
                clientPort);
 
-         ds.send(finalPacket);
+         Respond(finalPacket);
          out("All blocks sent");
          ds.close();
       } catch (Exception e) {
@@ -96,17 +126,13 @@ public class TftpWorker {
       }
    }
 
-   private byte[] ReadFile(String filename) {
-      try {
-         File file = new File(filename);
-         FileInputStream fis = new FileInputStream(file);
-         byte[] fileData = fis.readAllBytes();
-         fis.close();
-         return fileData;
-      } catch (Exception e) {
-         out("Error reading file");
-         return null;
-      }
+   private byte[] ReadFile(String filename) throws Exception {
+
+      File file = new File(filename);
+      FileInputStream fis = new FileInputStream(file);
+      byte[] fileData = fis.readAllBytes();
+      fis.close();
+      return fileData;
 
    }
 
@@ -135,6 +161,14 @@ public class TftpWorker {
 
       return blocks;
 
+   }
+
+   private static DatagramPacket MakePacket(byte type, byte[] data, InetAddress address, int port) {
+      byte[] packetData = new byte[data.length + 1];
+      packetData[0] = type;
+      System.arraycopy(data, 0, packetData, 1, data.length);
+
+      return new DatagramPacket(packetData, 0, packetData.length, address, port);
    }
 
    private static DatagramPacket MakePacket(byte type, byte block, byte[] data, InetAddress address, int port) {
