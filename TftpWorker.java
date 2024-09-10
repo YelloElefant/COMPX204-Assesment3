@@ -96,7 +96,13 @@ public class TftpWorker {
             byte[] ackData = new byte[2];
             DatagramPacket ackPacket = new DatagramPacket(ackData, 2);
 
-            ds.receive(ackPacket);
+            ds.setSoTimeout(30000);
+            try {
+               ds.receive(ackPacket);
+            } catch (Exception e) {
+               out("Timeout... closing connection");
+               return;
+            }
 
             byte ackType = ackData[0];
             byte blockNumberClient = ackData[1];
