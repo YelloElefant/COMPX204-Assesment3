@@ -48,6 +48,9 @@ public class TftpClient {
                     }
                 } catch (InvalidPacketException e) {
                     break;
+                } catch (Exception e) {
+                    System.err.println("Error packet recived: " + e.getMessage());
+                    break;
                 }
 
                 if (reponseType == 5) {
