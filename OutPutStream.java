@@ -11,7 +11,7 @@ public class OutPutStream {
         System.out.print(String.format("\033[%dA", lineCount));
     }
 
-    public static void clearOutPut() {
+    public static void clear() {
         for (int i = 0; i < lineCount; i++) {
             System.out.print(String.format("\033[%dA", 1));
             System.out.print("\033[2K"); // Erase line content
