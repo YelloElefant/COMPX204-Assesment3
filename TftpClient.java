@@ -1,11 +1,15 @@
 import java.io.*;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-
+import java.net.*;
+import java.util.*;
 // import java.util.Arrays;
 
 public class TftpClient {
+
+    private static DatagramSocket ds;
+    private static int port = 69;
+    private static InetAddress serverAddress;
+    private static String filename;
+
     public static void main(String[] args) {
         try {
             // if (args.length != 1) {
@@ -14,10 +18,11 @@ public class TftpClient {
             // }
 
             // // get file name
-            // String filename = args[0];
-            String filename = "lol";
+            // filename = args[0];
+            filename = "test";
+            System.out.println("Requesting file: " + filename);
 
-            DatagramSocket ds = new DatagramSocket();
+            ds = new DatagramSocket();
 
             byte[] data = filename.getBytes();
             byte type = 1;
@@ -25,67 +30,121 @@ public class TftpClient {
             message[0] = type;
             System.arraycopy(data, 0, message, 1, data.length);
 
-            InetAddress serverAddress = InetAddress.getByName("127.0.0.1");
+            serverAddress = InetAddress.getByName("127.0.0.1");
 
             DatagramPacket packet = new DatagramPacket(message, 0, message.length, serverAddress, 69);
 
             ds.send(packet);
+            int acksTimeOut = 0;
 
             // get response
             for (;;) {
                 byte[] buf = new byte[1472];
                 DatagramPacket p = new DatagramPacket(buf, 1472);
-                ds.receive(p);
+                ds.setSoTimeout(5000);
 
-                // convert response to string
-                TftpPacket handledPacket = new TftpPacket(p);
-
-                byte reponseType = handledPacket.getType();
-
-                try {
-                    if (reponseType == 4) {
-                        throw handledPacket.getError();
+                for (;;) {
+                    try {
+                        ds.receive(p);
+                        break;
+                    } catch (SocketTimeoutException e) {
+                        acksTimeOut++;
+                        System.out.println("Server not responding... retrying acknoledgement");
+                        Respond(packet);
+                        if (acksTimeOut == 5) {
+                            System.out.println("Server not responding");
+                            return;
+                        }
                     }
-                } catch (InvalidPacketException e) {
-                    break;
-                } catch (Exception e) {
-                    System.err.println("Error packet recived: " + e.getMessage());
-                    break;
                 }
 
-                if (reponseType == 5) {
-                    System.out.println("All blocks received");
-                    break;
-                }
-
-                byte reponseBlockNumber = handledPacket.getBlockNumber();
-                byte[] reponseBlockData = handledPacket.getData();
-
-                // write each response block to a file
-                try {
-                    File file = new File("received_" + filename);
-                    FileOutputStream fos = new FileOutputStream(file, true);
-                    fos.write(reponseBlockData);
-                    fos.close();
-                } catch (Exception e) {
-                    System.err.println("Exception: " + e);
+                byte responseBlockNumber = HandleResponse(p);
+                if (responseBlockNumber == -1) {
+                    System.out.println("Error packet received");
+                    return;
                 }
 
                 // send back ACK
-                byte[] ackData = new byte[2];
-                ackData[0] = 3;
-                ackData[1] = reponseBlockNumber;
-                DatagramPacket ackPacket = new DatagramPacket(ackData, 2, p.getAddress(), p.getPort());
-                ds.send(ackPacket);
+                DatagramPacket ackPacket = new DatagramPacket(new byte[] { 0, responseBlockNumber }, 2, p.getAddress(),
+                        p.getPort());
+
+                Acknowledge(ackPacket);
 
             }
-            ds.close();
 
         } catch (Exception e) {
-            System.err.println("Exception: " + e.getStackTrace());
+            System.err.println("Exception nigger: " + e.getStackTrace().toString());
 
         }
 
+    }
+
+    private static byte HandleResponse(DatagramPacket p) {
+        // convert response to string
+        TftpPacket handledPacket = new TftpPacket(p);
+        byte reponseType = handledPacket.getType();
+
+        // check for error packet
+        try {
+            if (reponseType == 4) {
+                throw handledPacket.getError();
+            }
+        } catch (InvalidPacketException e) {
+            return -1;
+        } catch (Exception e) {
+            System.err.println("Error packet recived: " + e.getMessage());
+            return -1;
+        }
+
+        // exit if all blocks received
+        if (reponseType == 5) {
+            System.out.println("All blocks received");
+            System.exit(0);
+        }
+
+        byte responseBlockNumber = handledPacket.getBlockNumber();
+        byte[] responseBlockData = handledPacket.getData();
+
+        // write each response block to a file
+        FileOutputStream fos = null;
+        try {
+            File file = new File("received_" + filename);
+            fos = new FileOutputStream(file, true);
+            fos.write(responseBlockData);
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (fos != null) {
+                    fos.close();
+                }
+            } catch (Exception e2) {
+                System.err.println("Exception2: " + e2);
+            }
+        }
+
+        // return with the block number to acknowledge
+        return responseBlockNumber;
+    }
+
+    private static void Acknowledge(DatagramPacket p) {
+        try {
+            byte[] ackData = new byte[2];
+            ackData[0] = 3;
+            ackData[1] = p.getData()[1];
+            DatagramPacket ackPacket = new DatagramPacket(ackData, 2, p.getAddress(), p.getPort());
+            Respond(ackPacket);
+        } catch (Exception e) {
+            System.err.println("Error sending ACK");
+        }
+    }
+
+    private static void Respond(DatagramPacket p) {
+        try {
+            ds.send(p);
+        } catch (Exception e) {
+            System.err.println("Error sending response");
+        }
     }
 
     // private static byte HandleResponse(DatagramPacket p) {
