@@ -14,12 +14,16 @@ public class TftpServer {
          for (;;) {
             byte[] buf = new byte[1472];
             DatagramPacket p = new DatagramPacket(buf, 1472);
+            OutPutStream.clear();
+            OutPutStream.out("Worker Count: " + workerCounter);
+
             ds.receive(p);
 
             TftpWorker worker = new TftpWorker(p, workerCounter++);
-            System.out.println("Worker created - for " + p.getAddress().toString().substring(1) + ":" + p.getPort()
-                  + " - requesting "
-                  + new String(worker.filename));
+            // OutPutStream.out("Worker created - for " +
+            // p.getAddress().toString().substring(1) + ":" + p.getPort()
+            // + " - requesting "
+            // + new String(worker.filename));
             worker.run();
 
          }

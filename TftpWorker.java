@@ -33,7 +33,7 @@ public class TftpWorker {
       filename = new String(data);
 
       if (this.type != RRQ) {
-         out("Invalid request type");
+         out("Invalid request type, dieing...");
          return;
       }
 
@@ -187,7 +187,7 @@ public class TftpWorker {
    }
 
    private void out(String s) {
-      System.out.println(name + ": " + s);
+      OutPutStream.out(name + ": " + s);
    }
 
 }
