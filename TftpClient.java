@@ -2,18 +2,20 @@ import java.io.*;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+
 // import java.util.Arrays;
 
 public class TftpClient {
     public static void main(String[] args) {
         try {
-            if (args.length != 1) {
-                System.err.println("Usage: java TftpClient <filename>");
-                System.exit(1);
-            }
+            // if (args.length != 1) {
+            // System.err.println("Usage: java TftpClient <filename>");
+            // System.exit(1);
+            // }
 
-            // get file name
-            String filename = args[0];
+            // // get file name
+            // String filename = args[0];
+            String filename = "lol";
 
             DatagramSocket ds = new DatagramSocket();
 
@@ -39,6 +41,14 @@ public class TftpClient {
                 TftpPacket handledPacket = new TftpPacket(p);
 
                 byte reponseType = handledPacket.getType();
+
+                try {
+                    if (reponseType == 4) {
+                        throw handledPacket.getError();
+                    }
+                } catch (InvalidPacketException e) {
+                    break;
+                }
 
                 if (reponseType == 5) {
                     System.out.println("All blocks received");
@@ -70,6 +80,7 @@ public class TftpClient {
 
         } catch (Exception e) {
             System.err.println("Exception: " + e.getStackTrace());
+
         }
 
     }
