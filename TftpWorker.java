@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class TftpWorker {
+public class TftpWorker extends Thread {
    private DatagramPacket req;
    private static final byte RRQ = 1;
    private static final byte DATA = 2;
@@ -22,6 +22,15 @@ public class TftpWorker {
    private DatagramSocket ds;
    private InetAddress clientAddress;
    private int clientPort;
+   private int port;
+
+   public int getPort() {
+      return port;
+   }
+
+   public String getLocalName() {
+      return name;
+   }
 
    public TftpWorker(DatagramPacket req, int number) {
       this.req = req;
@@ -46,6 +55,7 @@ public class TftpWorker {
 
       clientAddress = req.getAddress();
       clientPort = req.getPort();
+      port = ds.getLocalPort();
 
    }
 
@@ -85,6 +95,7 @@ public class TftpWorker {
       try {
 
          for (int i = 0; i < blocks.size(); i++) {
+            Thread.sleep(1000);
             byte blockNumber = (byte) (i + 1);
 
             byte[] block = blocks.get(i);
