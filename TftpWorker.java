@@ -41,11 +41,6 @@ public class TftpWorker extends Thread {
 
       filename = new String(data);
 
-      if (this.type != RRQ) {
-         out("Invalid request type, dieing...");
-         return;
-      }
-
       try {
          ds = new DatagramSocket();
       } catch (Exception e) {
@@ -56,6 +51,14 @@ public class TftpWorker extends Thread {
       clientAddress = req.getAddress();
       clientPort = req.getPort();
       port = ds.getLocalPort();
+
+      if (this.type == ACK) {
+         out("ACK found, sending error to client");
+         Respond(MakePacket(ERROR, new byte[] { (byte) 8 }, clientAddress, clientPort));
+      } else if (this.type != RRQ) {
+         out("Invalid request type, dieing...");
+         return;
+      }
 
    }
 
@@ -135,6 +138,8 @@ public class TftpWorker extends Thread {
 
          DatagramPacket finalPacket = new DatagramPacket(finalPacketData, 0, finalPacketData.length, clientAddress,
                clientPort);
+
+         Thread.sleep(1000);
 
          Respond(finalPacket);
          out("All blocks sent");

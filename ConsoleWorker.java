@@ -16,6 +16,7 @@ public class ConsoleWorker extends Thread {
                 try {
                     Thread.sleep(500);
                 } catch (Exception e) {
+                    OutPutStream.out("Error sleeping");
                 }
             }
         }

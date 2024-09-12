@@ -16,7 +16,8 @@ public class TftpPacket {
          4, new Exception("Illegal TFTP operation."),
          5, new Exception("Unknown transfer ID."),
          6, new Exception("File already exists."),
-         7, new Exception("No such user."));
+         7, new Exception("No such user."),
+         8, new Exception("ACK violation."));
 
    public Exception getError() throws InvalidPacketException {
       if (data.length == 1) {
