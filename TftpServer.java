@@ -4,6 +4,7 @@ import java.util.*;
 
 public class TftpServer {
    private static int port = 69;
+   public static List<TftpWorker> workers = new ArrayList<TftpWorker>();
 
    public void start_server() {
       int workerCounter = 0;
@@ -11,20 +12,29 @@ public class TftpServer {
          DatagramSocket ds = new DatagramSocket(port);
          System.out.println("TftpServer on port " + port);
 
+         // ConsoleWorker consoleWorker = new ConsoleWorker();
+         // consoleWorker.start();
+
          for (;;) {
             byte[] buf = new byte[1472];
             DatagramPacket p = new DatagramPacket(buf, 1472);
-            OutPutStream.clear();
-            OutPutStream.out("Worker Count: " + workerCounter);
 
             ds.receive(p);
-
             TftpWorker worker = new TftpWorker(p, workerCounter++);
+
             // OutPutStream.out("Worker created - for " +
             // p.getAddress().toString().substring(1) + ":" + p.getPort()
             // + " - requesting "
             // + new String(worker.filename));
-            worker.run();
+
+            workers.add(worker);
+            worker.start();
+
+            OutPutStream.clear();
+            for (TftpWorker workerLog : workers) {
+               OutPutStream.out("Worker " + workerLog.getLocalName() + " - " + workerLog.filename + " - "
+                     + workerLog.getPort());
+            }
 
          }
       } catch (Exception e) {
