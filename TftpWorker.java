@@ -79,6 +79,8 @@ public class TftpWorker extends Thread {
 
       sendBlocks(blocks);
 
+      OutPutStream.clear();
+
    }
 
    private void Respond(DatagramPacket p) {
@@ -95,7 +97,6 @@ public class TftpWorker extends Thread {
       try {
 
          for (int i = 0; i < blocks.size(); i++) {
-            Thread.sleep(1000);
             byte blockNumber = (byte) (i + 1);
 
             byte[] block = blocks.get(i);
