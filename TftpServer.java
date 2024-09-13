@@ -20,6 +20,16 @@ public class TftpServer {
             DatagramPacket p = new DatagramPacket(buf, 1472);
 
             ds.receive(p);
+
+            List<TftpWorker> workersToRemove = new ArrayList<TftpWorker>();
+            for (TftpWorker worker : workers) {
+               if (!worker.isAlive()) {
+                  workersToRemove.add(worker);
+               }
+            }
+            workers.removeAll(workersToRemove);
+            workerCounter = workers.size();
+
             TftpWorker worker = new TftpWorker(p, workerCounter++);
 
             // OutPutStream.out("Worker created - for " +
