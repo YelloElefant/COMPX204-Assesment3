@@ -39,7 +39,7 @@ public class TftpClient {
 
             serverAddress = InetAddress.getByName("127.0.0.1");
 
-            DatagramPacket packet = new DatagramPacket(message, 0, message.length, serverAddress, 69);
+            DatagramPacket packet = new DatagramPacket(message, 0, message.length, serverAddress, port);
 
             ds.send(packet);
             int acksTimeOut = 0;
