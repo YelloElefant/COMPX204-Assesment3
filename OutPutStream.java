@@ -1,5 +1,5 @@
 public class OutPutStream {
-    public static int lineCount = 0;
+    private static int lineCount = 0;
 
     public static void out(String message) {
         System.out.println(message);
@@ -18,4 +18,5 @@ public class OutPutStream {
         }
         lineCount = 0;
     }
+
 }
