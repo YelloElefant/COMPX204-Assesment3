@@ -6,14 +6,18 @@ public class TftpServer {
    private static int port = 69;
    public static List<TftpWorker> workers = new ArrayList<TftpWorker>();
 
+   public synchronized static void editWorkerList(List<TftpWorker> edit) {
+      workers = edit;
+   }
+
    public void start_server() {
       int workerCounter = 0;
       try {
          DatagramSocket ds = new DatagramSocket(port);
          System.out.println("TftpServer on port " + port);
 
-         // ConsoleWorker consoleWorker = new ConsoleWorker();
-         // consoleWorker.start();
+         ConsoleWorker consoleWorker = new ConsoleWorker();
+         consoleWorker.start();
 
          for (;;) {
             byte[] buf = new byte[1472];
@@ -21,13 +25,13 @@ public class TftpServer {
 
             ds.receive(p);
 
-            List<TftpWorker> workersToRemove = new ArrayList<TftpWorker>();
-            for (TftpWorker worker : workers) {
-               if (!worker.isAlive()) {
-                  workersToRemove.add(worker);
-               }
-            }
-            workers.removeAll(workersToRemove);
+            // List<TftpWorker> workersToRemove = new ArrayList<TftpWorker>();
+            // for (TftpWorker worker : workers) {
+            // if (!worker.isAlive()) {
+            // workersToRemove.add(worker);
+            // }
+            // }
+            // workers.removeAll(workersToRemove);
             workerCounter = workers.size();
 
             TftpWorker worker = new TftpWorker(p, workerCounter++);
@@ -40,11 +44,12 @@ public class TftpServer {
             workers.add(worker);
             worker.start();
 
-            OutPutStream.clear();
-            for (TftpWorker workerLog : workers) {
-               OutPutStream.out("Worker " + workerLog.getLocalName() + " - " + workerLog.filename + " - "
-                     + workerLog.getPort());
-            }
+            // OutPutStream.clear();
+            // for (TftpWorker workerLog : workers) {
+            // OutPutStream.out("Worker " + workerLog.getLocalName() + " - " +
+            // workerLog.filename + " - "
+            // + workerLog.getPort());
+            // }
 
          }
       } catch (Exception e) {
