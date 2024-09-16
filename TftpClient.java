@@ -3,13 +3,17 @@ import java.net.*;
 import java.util.*;
 // import java.util.Arrays;
 
+// TODO buffer data then check next data packet and if they are the same write one if they are differnt write the previouse one
+
 public class TftpClient {
 
     private static DatagramSocket ds;
     private static int port = 69;
     private static InetAddress serverAddress;
+    private static int serverPort = 0;
     private static String filename;
     private static String saveLocation = "received_";
+    private static byte[] repsonseBuffer;
 
     public static void main(String[] args) {
         try {
@@ -23,7 +27,7 @@ public class TftpClient {
             if (args.length == 2) {
                 saveLocation = args[1];
             } else {
-                saveLocation += filename;
+                saveLocation += filename.split("/")[filename.split("/").length - 1];
             }
 
             System.out.println("Requesting file: " + filename);
@@ -42,45 +46,62 @@ public class TftpClient {
             DatagramPacket packet = new DatagramPacket(message, 0, message.length, serverAddress, port);
 
             ds.send(packet);
-            int acksTimeOut = 0;
+
+            byte responseBlockNumber = 0;
+            byte prevBlockNumber = -1;
+
+            int temp = 0;
 
             // get response
             for (;;) {
                 byte[] buf = new byte[1472];
                 DatagramPacket p = new DatagramPacket(buf, 1472);
-                ds.setSoTimeout(5000);
+                ds.setSoTimeout(30000);
 
                 for (;;) {
                     try {
                         ds.receive(p);
+                        // check if server port is set
+                        if (serverPort == 0) {
+                            serverPort = p.getPort();
+                        }
                         break;
                     } catch (SocketTimeoutException e) {
-                        acksTimeOut++;
-                        System.out.println("Server not responding... retrying acknoledgement");
-                        if (acksTimeOut == 6) {
-                            System.out.println("Server not responding");
-                            return;
-                        }
-                        Respond(packet);
+                        System.out.println("Server not responding... closing conection");
+                        return;
                     }
                 }
 
-                byte responseBlockNumber = HandleResponse(p);
-                if (responseBlockNumber == -1) {
-                    System.out.println("Error packet received");
-                    return;
+                responseBlockNumber = HandleResponse(p);
+                if (responseBlockNumber != prevBlockNumber) {
+                    WriteToFile(repsonseBuffer);
+                    prevBlockNumber = responseBlockNumber;
+                } else {
+                    System.out.println("Duplicate block received not writing to file");
                 }
 
-                // send back ACK
-                DatagramPacket ackPacket = new DatagramPacket(new byte[] { 0, responseBlockNumber }, 2, p.getAddress(),
-                        p.getPort());
+                // if (responseBlockNumber == -1 ) {
+                // System.out.println("Error packet received");
+                // return;
+                // }
 
-                Acknowledge(ackPacket);
+                // send back ACK
+                DatagramPacket ackPacket = new DatagramPacket(new byte[] { 0, responseBlockNumber }, 2, serverAddress,
+                        serverPort);
+
+                if (temp == 100) {
+                    temp = 0;
+                } else {
+                    Acknowledge(ackPacket);
+                    System.out
+                            .println("ACK " + responseBlockNumber + " sent to: " + p.getAddress() + ":" + p.getPort());
+                    temp++;
+                }
 
             }
 
         } catch (Exception e) {
-            System.err.println("Exception nigger: " + e.getStackTrace().toString());
+            System.err.println("Exception: " + e.getStackTrace().toString());
 
         }
 
@@ -110,25 +131,11 @@ public class TftpClient {
         }
 
         byte responseBlockNumber = handledPacket.getBlockNumber();
-        byte[] responseBlockData = handledPacket.getData();
+        repsonseBuffer = handledPacket.getData();
+
+        System.out.println("Block " + responseBlockNumber + " received");
 
         // write each response block to a file
-        FileOutputStream fos = null;
-        try {
-            File file = new File(saveLocation);
-            fos = new FileOutputStream(file, true);
-            fos.write(responseBlockData);
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                if (fos != null) {
-                    fos.close();
-                }
-            } catch (Exception e2) {
-                System.err.println("Exception2: " + e2);
-            }
-        }
 
         // return with the block number to acknowledge
         return responseBlockNumber;
@@ -164,4 +171,24 @@ public class TftpClient {
     // System.out.println(new String(blockData));
     // return blockNumber;
     // }
+
+    private static void WriteToFile(byte[] data) {
+        FileOutputStream fos = null;
+
+        try {
+            File file = new File(saveLocation);
+            fos = new FileOutputStream(file, true);
+            fos.write(data);
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (fos != null) {
+                    fos.close();
+                }
+            } catch (Exception e2) {
+                System.err.println("Exception2: " + e2);
+            }
+        }
+    }
 }
