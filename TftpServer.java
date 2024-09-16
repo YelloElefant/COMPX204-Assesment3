@@ -16,8 +16,8 @@ public class TftpServer {
          DatagramSocket ds = new DatagramSocket(port);
          System.out.println("TftpServer on port " + port);
 
-         ConsoleWorker consoleWorker = new ConsoleWorker();
-         consoleWorker.start();
+         // ConsoleWorker consoleWorker = new ConsoleWorker();
+         // consoleWorker.start();
 
          for (;;) {
             byte[] buf = new byte[1472];
