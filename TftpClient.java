@@ -3,7 +3,9 @@ import java.net.*;
 import java.util.*;
 // import java.util.Arrays;
 
-// TODO buffer data then check next data packet and if they are the same write one if they are differnt write the previouse one
+// TODO: fix logging
+// TODO: fix error handling make it fix it self
+// TODO: clean up all code
 
 public class TftpClient {
 
@@ -50,8 +52,6 @@ public class TftpClient {
             byte responseBlockNumber = 0;
             byte prevBlockNumber = -1;
 
-            int temp = 0;
-
             // get response
             for (;;) {
                 byte[] buf = new byte[1472];
@@ -72,7 +72,8 @@ public class TftpClient {
                     }
                 }
 
-                responseBlockNumber = HandleResponse(p);
+                TftpPacket handeledPacket = new TftpPacket(p);
+                responseBlockNumber = HandleResponse(handeledPacket);
                 if (responseBlockNumber != prevBlockNumber) {
                     WriteToFile(repsonseBuffer);
                     prevBlockNumber = responseBlockNumber;
@@ -80,23 +81,13 @@ public class TftpClient {
                     System.out.println("Duplicate block received not writing to file");
                 }
 
-                // if (responseBlockNumber == -1 ) {
-                // System.out.println("Error packet received");
-                // return;
-                // }
-
                 // send back ACK
                 DatagramPacket ackPacket = new DatagramPacket(new byte[] { 0, responseBlockNumber }, 2, serverAddress,
                         serverPort);
 
-                if (temp == 100) {
-                    temp = 0;
-                } else {
-                    Acknowledge(ackPacket);
-                    System.out
-                            .println("ACK " + responseBlockNumber + " sent to: " + p.getAddress() + ":" + p.getPort());
-                    temp++;
-                }
+                Acknowledge(ackPacket);
+                System.out
+                        .println("ACK " + responseBlockNumber + " sent to: " + p.getAddress() + ":" + p.getPort());
 
             }
 
@@ -107,15 +98,14 @@ public class TftpClient {
 
     }
 
-    private static byte HandleResponse(DatagramPacket p) {
+    private static byte HandleResponse(TftpPacket p) {
         // convert response to string
-        TftpPacket handledPacket = new TftpPacket(p);
-        byte reponseType = handledPacket.getType();
+        byte reponseType = p.getType();
 
         // check for error packet
         try {
             if (reponseType == 4) {
-                throw handledPacket.getError();
+                throw p.getError();
             }
         } catch (InvalidPacketException e) {
             return -1;
@@ -130,8 +120,8 @@ public class TftpClient {
             System.exit(0);
         }
 
-        byte responseBlockNumber = handledPacket.getBlockNumber();
-        repsonseBuffer = handledPacket.getData();
+        byte responseBlockNumber = p.getBlockNumber();
+        repsonseBuffer = p.getData();
 
         System.out.println("Block " + responseBlockNumber + " received");
 
@@ -160,17 +150,6 @@ public class TftpClient {
             System.err.println("Error sending response");
         }
     }
-
-    // private static byte HandleResponse(DatagramPacket p) {
-    // byte[] data = p.getData();
-    // // byte type = data[0];
-    // byte blockNumber = data[1];
-    // byte[] blockData = Arrays.copyOfRange(data, 2, p.getLength());
-
-    // // print each block
-    // System.out.println(new String(blockData));
-    // return blockNumber;
-    // }
 
     private static void WriteToFile(byte[] data) {
         FileOutputStream fos = null;
