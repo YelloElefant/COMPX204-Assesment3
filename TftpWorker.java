@@ -2,6 +2,7 @@ import java.io.*;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -82,8 +83,6 @@ public class TftpWorker extends Thread {
 
       sendBlocks(blocks);
 
-      OutPutStream.clear();
-
    }
 
    private void Respond(DatagramPacket p) {
@@ -111,25 +110,44 @@ public class TftpWorker extends Thread {
             byte[] ackData = new byte[2];
             DatagramPacket ackPacket = new DatagramPacket(ackData, 2);
 
-            ds.setSoTimeout(30000);
-            try {
-               ds.receive(ackPacket);
-            } catch (Exception e) {
-               out("Timeout... closing connection");
-               return;
+            int acksTimeOut = 0;
+            ds.setSoTimeout(5000);
+
+            for (;;) {
+               // try {
+               // ds.receive(ackPacket);
+               // break;
+               // } catch (Exception e) {
+               // out("Timeout... closing connection");
+               // return;
+               // }
+
+               try {
+                  ds.receive(ackPacket);
+                  acksTimeOut = 0;
+                  break;
+               } catch (SocketTimeoutException e) {
+                  acksTimeOut++;
+                  System.out.println("Client not responding... retrying data " + blockNumber);
+                  if (acksTimeOut == 6) {
+                     System.out.println("Client not responding closing conection");
+                     return;
+                  }
+                  Respond(MakePacket(DATA, blockNumber, block, clientAddress, clientPort));
+               }
             }
 
             byte ackType = ackData[0];
             byte blockNumberClient = ackData[1];
+            out("ACK " + blockNumberClient + " received to block " + blockNumber);
 
             if (ackType != ACK) {
                out("Invalid ack");
                return;
             }
             if (blockNumberClient != blockNumber) {
-               i = blockNumberClient - 1;
+               i = blockNumberClient;
             }
-
          }
 
          byte[] finalPacketData = new byte[2];
@@ -138,8 +156,6 @@ public class TftpWorker extends Thread {
 
          DatagramPacket finalPacket = new DatagramPacket(finalPacketData, 0, finalPacketData.length, clientAddress,
                clientPort);
-
-         Thread.sleep(1000);
 
          Respond(finalPacket);
          out("All blocks sent");
@@ -204,8 +220,8 @@ public class TftpWorker extends Thread {
    }
 
    private void out(String s) {
-      // OutPutStream.out(name + ": " + s);
-      ConsoleWorker.addToSchedual(s);
+      OutPutStream.out(name + ": " + s);
+      // ConsoleWorker.addToSchedual(s);
    }
 
 }
