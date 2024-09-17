@@ -47,6 +47,8 @@ public class TftpClient {
             System.out.println("Directory: " + dir);
             System.out.println("Filename: " + filename);
 
+            serverAddress = InetAddress.getByName(server);
+
             // set save location
             if (args.length == 2) {
                 saveLocation = args[1];
