@@ -211,12 +211,11 @@ public class TftpWorker extends Thread {
    }
 
    private static DatagramPacket MakePacket(byte type, byte block, byte[] data, InetAddress address, int port) {
-      byte[] packetData = new byte[data.length + 2];
-      packetData[0] = type;
-      packetData[1] = block;
-      System.arraycopy(data, 0, packetData, 2, data.length);
+      byte[] packetData = new byte[data.length + 1];
+      packetData[0] = block;
+      System.arraycopy(data, 0, packetData, 1, data.length);
 
-      return new DatagramPacket(packetData, 0, packetData.length, address, port);
+      return MakePacket(type, packetData, address, port);
    }
 
    private void out(String s) {
