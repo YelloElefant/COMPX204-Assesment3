@@ -6,6 +6,7 @@ import java.util.*;
 // TODO: fix logging
 // TODO: fix error handling make it fix it self
 // TODO: clean up all code
+// TODO: first arg change to server:port/fileName
 
 public class TftpClient {
 
@@ -20,30 +21,55 @@ public class TftpClient {
     public static void main(String[] args) {
         try {
             if (args.length > 2 || args.length < 1) {
-                System.err.println("Usage: java TftpClient <filename>");
+                System.err.println("Usage: java TftpClient <filename> <save location>");
                 System.exit(1);
             }
 
-            // get file name
-            filename = args[0];
+            int indexOfStartOfFilePath = args[0].indexOf("/");
+            if (indexOfStartOfFilePath < 0) {
+                System.out.println("Invalid input");
+                return;
+            }
+
+            String filePath = args[0].substring(indexOfStartOfFilePath);
+            String serverAndPort = args[0].substring(0, indexOfStartOfFilePath);
+
+            String[] serverAndPortSplit = serverAndPort.split(":");
+            String server = serverAndPortSplit.length != 1 ? serverAndPortSplit[0] : "localhost";
+            port = Integer.parseInt(serverAndPortSplit.length > 1 ? serverAndPortSplit[1].split("/")[0] : "69");
+
+            int fileNameStartIndex = filePath.lastIndexOf("/") + 1;
+            String dir = fileNameStartIndex > 1 ? filePath.substring(1, fileNameStartIndex) : "";
+            String filename = fileNameStartIndex > 0 ? filePath.substring(fileNameStartIndex) : "";
+
+            System.out.println("Sever: " + server);
+            System.out.println("Port: " + port);
+            System.out.println("Directory: " + dir);
+            System.out.println("Filename: " + filename);
+
+            // set save location
             if (args.length == 2) {
                 saveLocation = args[1];
             } else {
-                saveLocation += filename.split("/")[filename.split("/").length - 1];
+                saveLocation += filename;
             }
 
+            // tell user what file is being requested and where it is being saved
             System.out.println("Requesting file: " + filename);
+            System.out.println("Requesting file path: " + dir);
             System.out.println("Save location: " + saveLocation);
+            System.out.println("Server: " + server);
+            System.out.println("Port: " + port);
 
+            // create socket to file requsting server
             ds = new DatagramSocket();
 
+            // create request message
             byte[] data = filename.getBytes();
             byte type = 1;
             byte[] message = new byte[data.length + 1];
             message[0] = type;
             System.arraycopy(data, 0, message, 1, data.length);
-
-            serverAddress = InetAddress.getByName("127.0.0.1");
 
             DatagramPacket packet = new DatagramPacket(message, 0, message.length, serverAddress, port);
 
@@ -92,7 +118,7 @@ public class TftpClient {
             }
 
         } catch (Exception e) {
-            System.err.println("Exception: " + e.getStackTrace().toString());
+            System.err.println("Exception: " + e.getMessage());
 
         }
 
