@@ -42,12 +42,16 @@ public class TftpClient {
             String dir = fileNameStartIndex > 1 ? filePath.substring(1, fileNameStartIndex) : "";
             String filename = fileNameStartIndex > 0 ? filePath.substring(fileNameStartIndex) : "";
 
+            serverAddress = InetAddress.getByName(server);
+            if (serverAddress == null) {
+                System.err.println("Invalid server address");
+                System.exit(1);
+            }
+
             System.out.println("Sever: " + server);
             System.out.println("Port: " + port);
             System.out.println("Directory: " + dir);
             System.out.println("Filename: " + filename);
-
-            serverAddress = InetAddress.getByName(server);
 
             // set save location
             if (args.length == 2) {
