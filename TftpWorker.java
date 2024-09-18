@@ -219,8 +219,7 @@ public class TftpWorker extends Thread {
    }
 
    private void out(String s) {
-      OutPutStream.out(name + ": " + s);
-      // ConsoleWorker.addToSchedual(s);
+      System.out.println(name + ": " + s);
    }
 
 }
