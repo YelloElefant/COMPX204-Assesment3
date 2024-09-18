@@ -28,18 +28,58 @@ import java.util.List;
  */
 public class TftpWorker extends Thread {
 
+   /**
+    * Request packet, type code 1, the data is the filename to read, NO block
+    * number
+    */
    private static final byte RRQ = 1;
+
+   /**
+    * Data packet, type code 2, contains the block number followed by the data
+    * being sent
+    */
    private static final byte DATA = 2;
+
+   /**
+    * Acknowledgement packet, type code 3, just contains the block number of the
+    * data packet being acknowledged
+    */
    private static final byte ACK = 3;
+
+   /**
+    * Error packet, type code 4, just contains the error code describing the error,
+    * NO block number
+    */
    private static final byte ERROR = 4;
+
+   /**
+    * The name of the worker
+    */
    private String name = "TftpWorker";
 
-   private byte type;
+   /**
+    * The name of the file to read
+    */
    public String filename;
 
+   /**
+    * The DatagramSocket used to send and receive packets
+    */
    private DatagramSocket ds;
+
+   /**
+    * The address of the client
+    */
    private InetAddress clientAddress;
+
+   /**
+    * The port of the client
+    */
    private int clientPort;
+
+   /**
+    * The port the worker is listening on
+    */
    private int port;
 
    /**
@@ -61,7 +101,8 @@ public class TftpWorker extends Thread {
    }
 
    /**
-    * Constructor for the TftpWorker class. This constructor takes a DatagramPacket
+    * Constructor for the TftpWorker class this sets context for the worker. This
+    * constructor takes a DatagramPacket
     * and an id number. The id is appended to the name of the worker to make it
     * easy
     * to identify the worker in the console output. The packet is processed by
@@ -80,7 +121,7 @@ public class TftpWorker extends Thread {
    public TftpWorker(DatagramPacket req, int id) {
       this.name += id;
 
-      this.type = req.getData()[0];
+      byte type = req.getData()[0];
 
       filename = new String(Arrays.copyOfRange(req.getData(), 1, req.getLength()));
 
@@ -95,16 +136,22 @@ public class TftpWorker extends Thread {
       clientPort = req.getPort();
       port = ds.getLocalPort();
 
-      if (this.type == ACK) {
+      if (type == ACK) {
          out("ACK found, sending error to client");
          Respond(MakePacket(ERROR, new byte[] { (byte) 8 }, clientAddress, clientPort));
-      } else if (this.type != RRQ) {
+      } else if (type != RRQ) {
          out("Invalid request type, dieing...");
          return;
       }
 
    }
 
+   /**
+    * The run method for the worker thread executes when the thread starts. simply
+    * reads the file, gets the blocks
+    * from the file data, then calls {@link #sendBlocks(List)} to
+    * send the blocks to the client
+    */
    public void run() {
 
       byte[] fileData;
