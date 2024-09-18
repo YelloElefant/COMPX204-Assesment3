@@ -125,12 +125,10 @@ public class TftpClient {
     public static void main(String[] args) {
         try {
             // check for correct number of arguments
-            // if (args.length > 2 || args.length < 1) {
-            // System.err.println("Usage: java TftpClient <server>:<port>/<filePath>
-            // <savelocation>");
-            // System.exit(1);
-            // }
-            args = new String[] { "localhost:69/test" };
+            if (args.length > 2 || args.length < 1) {
+                System.err.println("Usage: java TftpClient <server>:<port>/<filePath> <savelocation>");
+                System.exit(1);
+            }
 
             // parse arguments given
             ParseArgs(args);
@@ -249,9 +247,9 @@ public class TftpClient {
         String serverAndPort = args[0].substring(0, indexOfStartOfFilePath);
 
         // split the serverAndPort string into server and port
-        String[] serverAndPortSplit = serverAndPort.split(":");
+        String[] serverAndPortSplit = serverAndPort.equals("") ? new String[0] : serverAndPort.split(":");
         // set server and port
-        String server = serverAndPortSplit.length != 1 ? serverAndPortSplit[0] : "localhost";
+        String server = serverAndPortSplit.length != 0 ? serverAndPortSplit[0] : "localhost";
         port = Integer.parseInt(serverAndPortSplit.length > 1 ? serverAndPortSplit[1].split("/")[0] : "69");
 
         // get file name and dir (fileName has to be after the last /)
