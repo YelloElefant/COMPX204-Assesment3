@@ -10,14 +10,11 @@ public class TftpServer {
       workers = edit;
    }
 
-   public void start_server() {
+   public static void main(String[] args) {
       int workerCounter = 0;
       try {
          DatagramSocket ds = new DatagramSocket(port);
          System.out.println("TftpServer on port " + port);
-
-         // ConsoleWorker consoleWorker = new ConsoleWorker();
-         // consoleWorker.start();
 
          for (;;) {
             byte[] buf = new byte[1472];
@@ -25,31 +22,16 @@ public class TftpServer {
 
             ds.receive(p);
 
-            // List<TftpWorker> workersToRemove = new ArrayList<TftpWorker>();
-            // for (TftpWorker worker : workers) {
-            // if (!worker.isAlive()) {
-            // workersToRemove.add(worker);
-            // }
-            // }
-            // workers.removeAll(workersToRemove);
             workerCounter = workers.size();
 
             TftpWorker worker = new TftpWorker(p, workerCounter++);
 
-            // OutPutStream.out("Worker created - for " +
-            // p.getAddress().toString().substring(1) + ":" + p.getPort()
-            // + " - requesting "
-            // + new String(worker.filename));
+            System.out
+                  .println(worker.getLocalName() + " - serving " + p.getAddress().getHostAddress() + ":" + p.getPort()
+                        + " - on port " + worker.getPort() + " - for file " + worker.filename);
 
             workers.add(worker);
             worker.start();
-
-            // OutPutStream.clear();
-            // for (TftpWorker workerLog : workers) {
-            // OutPutStream.out("Worker " + workerLog.getLocalName() + " - " +
-            // workerLog.filename + " - "
-            // + workerLog.getPort());
-            // }
 
          }
       } catch (Exception e) {
@@ -59,8 +41,4 @@ public class TftpServer {
       return;
    }
 
-   public static void main(String args[]) {
-      TftpServer d = new TftpServer();
-      d.start_server();
-   }
 }
