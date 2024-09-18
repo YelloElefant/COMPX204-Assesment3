@@ -28,9 +28,9 @@ import java.util.*;
  * The arguments should be in the format server:port/filePath save
  * location
  * 
- * </br>
- * </br>
- * <dt>Default values:</dt>
+ * <br>
+ * <br>
+ * <b>Default values:</b>
  * <ul>
  * <li>server: loaclhost</li>
  * <li>port: 69</li>
@@ -223,9 +223,9 @@ public class TftpClient {
      * throw an
      * UnknownHostException.
      * 
-     * </br>
-     * </br>
-     * <dt>Default values:</dt>
+     * <br>
+     * <br>
+     * <b>Default values:</b>
      * <ul>
      * <li>server: loaclhost</li>
      * <li>port: 69</li>

@@ -23,7 +23,8 @@ public class TftpServer {
     * worker's information (Workers name, who it is servering and to what port,
     * what port it is serving on and what file it is serving).
     *
-    * @param args
+    * @param args arguments to the program. If there is a port number in position 1
+    *             in the args, it will use that port number
     */
    public static void main(String[] args) {
       // if there is a port number in the arguments, use that port number

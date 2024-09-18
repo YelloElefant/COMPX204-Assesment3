@@ -116,8 +116,20 @@ public class TftpWorker extends Thread {
     * of the client from the req packet. the file name is the data from the packet
     * excluding the first byte
     * 
-    * @param req    the request packet to process
-    * @param number the id number of the worker
+    * @param req the request packet to process
+    * @param id  the id number of the worker
+    * @throws InvalidPacketException if the packet is not a valid TFTP packet
+    * @throws SocketException        if there is an error creating the
+    *                                DatagramSocket
+    * @throws SecurityException      if there is a security manager and it denies
+    *                                the permission to create a new DatagramSocket
+    * @see DatagramPacket
+    * @see DatagramSocket
+    * @see InetAddress
+    * @see InvalidPacketException
+    * @see SocketException
+    * @see SecurityException
+    * @see TftpPacket
     */
    public TftpWorker(DatagramPacket req, int id) throws InvalidPacketException, SocketException, SecurityException {
       TftpPacket request = new TftpPacket(req);
