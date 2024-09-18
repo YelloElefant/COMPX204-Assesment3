@@ -206,31 +206,43 @@ public class TftpWorker extends Thread {
 
       try {
 
+         // loop through the blocks and send each one to the client
          for (int i = 0; i < blocks.size(); i++) {
+            // set the block number and the block data to send
             byte blockNumber = (byte) (i + 1);
-
             byte[] block = blocks.get(i);
 
+            // create the packet to send
             DatagramPacket packet = MakePacket(DATA, blockNumber, block, clientAddress, clientPort);
 
+            // send the packet
             Respond(packet);
+
+            // check for last block
             if (block.length < 512) {
                out("Last block sent");
                return;
             }
+
+            // prepare for the response
             byte[] ackData = new byte[2];
             DatagramPacket ackPacket = new DatagramPacket(ackData, 2);
 
+            // set time out to 30 seconds and a counter for re sends
             int acksTimeOut = 0;
             ds.setSoTimeout(5000);
 
+            // loop until the client responds or the connection is closed
             for (;;) {
 
                try {
+                  // receive the ack packet or throw when the time out is reached
                   ds.receive(ackPacket);
                   acksTimeOut = 0;
                   break;
                } catch (SocketTimeoutException e) {
+                  // catch time out and resend the block. if I have tried 6 times then close the
+                  // connection
                   acksTimeOut++;
                   System.out.println("Client not responding... retrying data " + blockNumber);
                   if (acksTimeOut == 6) {
@@ -241,8 +253,10 @@ public class TftpWorker extends Thread {
                }
             }
 
-            byte ackType = ackData[0];
-            byte blockNumberClient = ackData[1];
+            TftpPacket ackHandled = new TftpPacket(ackPacket);
+
+            byte ackType = ackHandled.getType();
+            byte blockNumberClient = ackHandled.getBlockNumber();
 
             if (ackType != ACK) {
                out("Invalid ack");
@@ -280,7 +294,7 @@ public class TftpWorker extends Thread {
     * @see FileInputStream
     */
    private byte[] ReadFile(String filename) throws Exception {
-
+      // open the file and read all the data into a byte array and return it
       File file = new File(filename);
       FileInputStream fis = new FileInputStream(file);
       byte[] fileData = fis.readAllBytes();
@@ -298,21 +312,27 @@ public class TftpWorker extends Thread {
     * @return a list of byte arrays
     */
    private List<byte[]> GetBlocks(byte[] data) {
+      // make a list of byte arrays
       List<byte[]> blocks = new ArrayList<byte[]>();
 
+      // calc the amount of full blocks
       int amountOfBlocks = data.length / 512;
 
+      // set start and end points for the blocks
       int start = 0;
       int end = 512;
       byte[] block;
 
+      // loop through the data array and copy the range start to end into a new array
+      // if the end position is not within the last block
       while (end / 512 != amountOfBlocks + 1) {
          block = Arrays.copyOfRange(data, start, end);
          blocks.add(block);
          start += 512;
          end += 512;
-
       }
+
+      // copy the last block into a new array
       block = Arrays.copyOfRange(data, start, data.length);
       blocks.add(block);
 
@@ -335,10 +355,12 @@ public class TftpWorker extends Thread {
     * @see DatagramPacket
     */
    private DatagramPacket MakePacket(byte type, byte[] data, InetAddress address, int port) {
+      // shift the data array down by one and slot the type into the first position
       byte[] packetData = new byte[data.length + 1];
       packetData[0] = type;
       System.arraycopy(data, 0, packetData, 1, data.length);
 
+      // create the packet
       return new DatagramPacket(packetData, 0, packetData.length, address, port);
    }
 
@@ -360,10 +382,13 @@ public class TftpWorker extends Thread {
     * @see DatagramPacket
     */
    private DatagramPacket MakePacket(byte type, byte block, byte[] data, InetAddress address, int port) {
+      // shift the data array down by one and slot the block number into the first
+      // position
       byte[] packetData = new byte[data.length + 1];
       packetData[0] = block;
       System.arraycopy(data, 0, packetData, 1, data.length);
 
+      // create the packet
       return MakePacket(type, packetData, address, port);
    }
 
