@@ -8,11 +8,9 @@ import java.util.Arrays;
 import java.util.List;
 
 public class TftpWorker extends Thread {
-   private DatagramPacket req;
    private static final byte RRQ = 1;
    private static final byte DATA = 2;
    private static final byte ACK = 3;
-   private static final byte END = 5;
    private static final byte ERROR = 4;
    private String name = "TftpWorker";
 
@@ -34,7 +32,6 @@ public class TftpWorker extends Thread {
    }
 
    public TftpWorker(DatagramPacket req, int number) {
-      this.req = req;
       this.name += number;
 
       this.type = req.getData()[0];
@@ -106,7 +103,10 @@ public class TftpWorker extends Thread {
             DatagramPacket packet = MakePacket(DATA, blockNumber, block, clientAddress, clientPort);
 
             Respond(packet);
-
+            if (block.length < 512) {
+               out("Last block sent");
+               return;
+            }
             byte[] ackData = new byte[2];
             DatagramPacket ackPacket = new DatagramPacket(ackData, 2);
 
@@ -150,9 +150,10 @@ public class TftpWorker extends Thread {
             }
          }
 
-         byte[] finalPacketData = new byte[2];
-         finalPacketData[0] = END;
+         byte[] finalPacketData = new byte[3];
+         finalPacketData[0] = DATA;
          finalPacketData[1] = (byte) (blocks.size() + 1);
+         finalPacketData[2] = 0;
 
          DatagramPacket finalPacket = new DatagramPacket(finalPacketData, 0, finalPacketData.length, clientAddress,
                clientPort);

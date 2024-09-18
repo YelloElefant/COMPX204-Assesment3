@@ -124,11 +124,15 @@ public class TftpClient {
      */
     public static void main(String[] args) {
         try {
-            if (args.length > 2 || args.length < 1) {
-                System.err.println("Usage: java TftpClient <server>:<port>/<filePath> <save location>");
-                System.exit(1);
-            }
+            // check for correct number of arguments
+            // if (args.length > 2 || args.length < 1) {
+            // System.err.println("Usage: java TftpClient <server>:<port>/<filePath>
+            // <savelocation>");
+            // System.exit(1);
+            // }
+            args = new String[] { "localhost:69/test" };
 
+            // parse arguments given
             ParseArgs(args);
 
             // create socket to file requsting server
@@ -141,19 +145,23 @@ public class TftpClient {
             message[0] = type;
             System.arraycopy(data, 0, message, 1, data.length);
 
+            // send request
             DatagramPacket packet = new DatagramPacket(message, 0, message.length, serverAddress, port);
-
             ds.send(packet);
 
+            // prepare block numbers for later checking
             byte responseBlockNumber = 0;
             byte prevBlockNumber = -1;
 
             // get response
             for (;;) {
+                // set up beffer, packet and set timeout
                 byte[] buf = new byte[1472];
                 DatagramPacket p = new DatagramPacket(buf, 1472);
                 ds.setSoTimeout(30000);
 
+                // get response from server, if server does not respond in 30 seconds close the
+                // conection and exit
                 for (;;) {
                     try {
                         ds.receive(p);
@@ -168,8 +176,13 @@ public class TftpClient {
                     }
                 }
 
+                // make TftpPacket from response
                 TftpPacket handeledPacket = new TftpPacket(p);
+
+                // handle response
                 responseBlockNumber = HandleResponse(handeledPacket);
+
+                // check for duplicate data packet
                 if (responseBlockNumber != prevBlockNumber) {
                     WriteToFile(repsonseBuffer);
                     prevBlockNumber = responseBlockNumber;
@@ -186,6 +199,7 @@ public class TftpClient {
             }
 
         } catch (Exception e) {
+            // print out any exceptions
             System.err.println("Exception: " + e.getMessage());
 
         }
@@ -223,37 +237,43 @@ public class TftpClient {
      */
     private static void ParseArgs(String[] args) throws UnknownHostException {
 
+        // get where the file path starts as an index
         int indexOfStartOfFilePath = args[0].indexOf("/");
         if (indexOfStartOfFilePath < 0) {
             System.out.println("Invalid input");
             return;
         }
 
+        // get serverAndPort and filePath as 2 strings
         String filePath = args[0].substring(indexOfStartOfFilePath);
         String serverAndPort = args[0].substring(0, indexOfStartOfFilePath);
 
+        // split the serverAndPort string into server and port
         String[] serverAndPortSplit = serverAndPort.split(":");
+        // set server and port
         String server = serverAndPortSplit.length != 1 ? serverAndPortSplit[0] : "localhost";
         port = Integer.parseInt(serverAndPortSplit.length > 1 ? serverAndPortSplit[1].split("/")[0] : "69");
 
+        // get file name and dir (fileName has to be after the last /)
         int fileNameStartIndex = filePath.lastIndexOf("/") + 1;
+        // set filename and dir
         String dir = fileNameStartIndex > 1 ? filePath.substring(1, fileNameStartIndex) : "";
         filename = fileNameStartIndex > 0 ? filePath.substring(fileNameStartIndex) : "";
         filename = dir + filename;
+
+        // set server address from server string
         serverAddress = InetAddress.getByName(server);
-        if (serverAddress == null) {
-            System.err.println("Invalid server address");
-            System.exit(1);
-        }
 
         // set save location
         if (args.length == 2) {
             saveLocation = args[1];
         } else {
+            // if save location is not provided save in current directory with received_ +
+            // fileName
             saveLocation += filename;
         }
 
-        // tell user what file is being requested and where it is being saved
+        // tell user all set values (tell client the context for the program)
         System.out.println("Requesting file: " + filename);
         System.out.println("Requesting file path: " + dir);
         System.out.println("Save location: " + saveLocation);
@@ -292,8 +312,9 @@ public class TftpClient {
         }
 
         // exit if all blocks received
-        if (reponseType == 5) {
+        if (p.getData().length < 512 || p.getData().length == 0) {
             System.out.println("All blocks received");
+            WriteToFile(p.getData());
             System.exit(0);
         }
 
