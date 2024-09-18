@@ -310,18 +310,23 @@ public class TftpClient {
             return -1;
         }
 
-        // exit if all blocks received
-        if (p.getData().length < 512 || p.getData().length == 0) {
-            System.out.println("All blocks received");
-            WriteToFile(p.getData());
-            System.exit(0);
+        try {
+            // exit if all blocks received
+            if (p.getData().length < 512 || p.getData().length == 0) {
+                System.out.println("All blocks received");
+                WriteToFile(p.getData());
+                System.exit(0);
+            }
+
+            byte responseBlockNumber = p.getBlockNumber();
+            repsonseBuffer = p.getData();
+
+            // return with the block number to acknowledge
+            return responseBlockNumber;
+        } catch (InvalidPacketException e) {
+            System.err.println("Invalid packet received: " + e.getMessage());
+            return -1;
         }
-
-        byte responseBlockNumber = p.getBlockNumber();
-        repsonseBuffer = p.getData();
-
-        // return with the block number to acknowledge
-        return responseBlockNumber;
     }
 
     /**
@@ -338,10 +343,13 @@ public class TftpClient {
      */
     private static void Acknowledge(DatagramPacket p) {
         try {
+            // make ack packet
             byte[] ackData = new byte[2];
             ackData[0] = 3;
             ackData[1] = p.getData()[1];
             DatagramPacket ackPacket = new DatagramPacket(ackData, 2, p.getAddress(), p.getPort());
+
+            // send ack
             Respond(ackPacket);
         } catch (Exception e) {
             System.err.println("Error sending ACK");
@@ -359,6 +367,7 @@ public class TftpClient {
      * @see DatagramPacket
      */
     private static void Respond(DatagramPacket p) {
+        // trys to send the packet
         try {
             ds.send(p);
         } catch (Exception e) {
@@ -378,15 +387,18 @@ public class TftpClient {
      * @see saveLocation
      */
     private static void WriteToFile(byte[] data) {
+        // set up file output stream
         FileOutputStream fos = null;
 
         try {
+            // write data to file
             File file = new File(saveLocation);
             fos = new FileOutputStream(file, true);
             fos.write(data);
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
+            // finnaly close the file output stream if it is open
             try {
                 if (fos != null) {
                     fos.close();
