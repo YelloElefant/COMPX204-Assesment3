@@ -22,7 +22,7 @@ public class TftpPacket {
    /**
     * the block number of the packet
     */
-   private byte blockNumber;
+   private int blockNumber = 512;
 
    /**
     * the data section of the packet
@@ -86,8 +86,9 @@ public class TftpPacket {
          offset++;
       }
 
-      this.blockNumber = p.getData()[1];
-      this.data = Arrays.copyOfRange(p.getData(), offset, p.getLength());
+      if (this.type != 3) {
+         this.data = Arrays.copyOfRange(p.getData(), offset, p.getLength());
+      }
 
    }
 
@@ -104,17 +105,29 @@ public class TftpPacket {
     * Get the block number of the packet
     * 
     * @return the block number of the packet
+    * @throws InvalidPacketException if the packet doesnt contain a block number
+    * @see InvalidPacketException
     */
-   public byte getBlockNumber() {
-      return blockNumber;
+   public byte getBlockNumber() throws InvalidPacketException {
+      if (blockNumber == 512) {
+         throw new InvalidPacketException("Packet doesnt contain a block number");
+      } else {
+         return (byte) blockNumber;
+      }
    }
 
    /**
     * Get the data of the packet
     * 
     * @return the data of the packet
+    * @throws InvalidPacketException if the packet doesnt contain data
+    * @see InvalidPacketException
     */
-   public byte[] getData() {
-      return data;
+   public byte[] getData() throws InvalidPacketException {
+      if (data == null) {
+         throw new InvalidPacketException("Packet doesnt contain data");
+      } else {
+         return data;
+      }
    }
 }
