@@ -7,7 +7,27 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * The TftpWorker class is a thread that handles a single TFTP request. The
+ * worker is created with a DatagramPacket containing the request and an id
+ * number. The worker reads the request and extracts the filename from the
+ * packet. The worker then reads the file and splits it into blocks of 512 bytes
+ * each. The worker then sends each block
+ * to the client and waits for an ACK packet with the block number that matches
+ * the one it sent. If the client does not respond after 5 seconds the block is
+ * resent. If the client does not respond after 30 seconds the connection is
+ * closed. EOF is marked by sending a block of size less than 512 or a block of
+ * 0.
+ * 
+ * @author YelloElefant
+ * @version 1.0
+ * @see DatagramPacket
+ * @see DatagramSocket
+ * @see InetAddress
+ * @see Thread
+ */
 public class TftpWorker extends Thread {
+
    private static final byte RRQ = 1;
    private static final byte DATA = 2;
    private static final byte ACK = 3;
@@ -22,16 +42,43 @@ public class TftpWorker extends Thread {
    private int clientPort;
    private int port;
 
+   /**
+    * Returns the port the worker is listening on
+    * 
+    * @return the port the worker is listening on
+    */
    public int getPort() {
       return port;
    }
 
+   /**
+    * Returns the name of the worker
+    * 
+    * @return the name of the worker
+    */
    public String getLocalName() {
       return name;
    }
 
-   public TftpWorker(DatagramPacket req, int number) {
-      this.name += number;
+   /**
+    * Constructor for the TftpWorker class. This constructor takes a DatagramPacket
+    * and an id number. The id is appended to the name of the worker to make it
+    * easy
+    * to identify the worker in the console output. The packet is processed by
+    * first getting the type of packet
+    * then the filename is extracted from the packet. The type is checked to see if
+    * it is a RRQ packet if it is a ACK packet then an ERROR packet is sent to the
+    * client with the error code 8. If the type is neither then the worker dies.
+    * context is set on the worker by creating a new DatagramSocket with the adress
+    * and port
+    * of the client from the req packet. the file name is the data from the packet
+    * excluding the first byte
+    * 
+    * @param req    the request packet to process
+    * @param number the id number of the worker
+    */
+   public TftpWorker(DatagramPacket req, int id) {
+      this.name += id;
 
       this.type = req.getData()[0];
 
@@ -80,6 +127,15 @@ public class TftpWorker extends Thread {
 
    }
 
+   /**
+    * Sends a packet to the client. This method sends the given packet to the
+    * client and catches any exceptions that may occur while sending the packet
+    * this method is a helper method for the thread to be called at anypoint after
+    * initialization to send any spacket to the client
+    *
+    * @param p the packet to send to the client
+    * @see DatagramPacket
+    */
    private void Respond(DatagramPacket p) {
       try {
          ds.send(p);
@@ -88,6 +144,20 @@ public class TftpWorker extends Thread {
       }
    }
 
+   /**
+    * Sends a list of blocks to the client. This method sends each block in the
+    * list to the client and waits for an ACk packet with a block number that
+    * matches the one it sent, before sending the next block. If the
+    * client does not respond after 5 seconds the block is resent. If the client
+    * does not respond after 30 seconds the connection is closed.
+    * all blocks are sent in order and the last block is marked as the last block
+    * by either
+    * if the last block in the list is of size 512 then a final packet is sent with
+    * length 0
+    * if the last block is less than 512 then that is the final packet sent
+    *
+    * @param blocks the list of byte arrays to send to the client
+    */
    private void sendBlocks(List<byte[]> blocks) {
       // send each block and wait for a response before sending the next
 
@@ -112,13 +182,6 @@ public class TftpWorker extends Thread {
             ds.setSoTimeout(5000);
 
             for (;;) {
-               // try {
-               // ds.receive(ackPacket);
-               // break;
-               // } catch (Exception e) {
-               // out("Timeout... closing connection");
-               // return;
-               // }
 
                try {
                   ds.receive(ackPacket);
@@ -163,6 +226,16 @@ public class TftpWorker extends Thread {
       }
    }
 
+   /**
+    * Reads a file from a specified filename (this is complete path to file) and
+    * returns the data as a byte array
+    *
+    * @param filename the path to the file to read
+    * @return a byte array containing the data from the file
+    * @throws Exception if there is an error reading the file
+    * @see File
+    * @see FileInputStream
+    */
    private byte[] ReadFile(String filename) throws Exception {
 
       File file = new File(filename);
@@ -181,7 +254,7 @@ public class TftpWorker extends Thread {
     * @param data the byte[] to split into blocks
     * @return a list of byte arrays
     */
-   private static List<byte[]> GetBlocks(byte[] data) {
+   private List<byte[]> GetBlocks(byte[] data) {
       List<byte[]> blocks = new ArrayList<byte[]>();
 
       int amountOfBlocks = data.length / 512;
@@ -218,7 +291,7 @@ public class TftpWorker extends Thread {
     *         address and port
     * @see DatagramPacket
     */
-   private static DatagramPacket MakePacket(byte type, byte[] data, InetAddress address, int port) {
+   private DatagramPacket MakePacket(byte type, byte[] data, InetAddress address, int port) {
       byte[] packetData = new byte[data.length + 1];
       packetData[0] = type;
       System.arraycopy(data, 0, packetData, 1, data.length);
@@ -243,7 +316,7 @@ public class TftpWorker extends Thread {
     * @see MakePacket(byte, byte[], InetAddress, int)
     * @see DatagramPacket
     */
-   private static DatagramPacket MakePacket(byte type, byte block, byte[] data, InetAddress address, int port) {
+   private DatagramPacket MakePacket(byte type, byte block, byte[] data, InetAddress address, int port) {
       byte[] packetData = new byte[data.length + 1];
       packetData[0] = block;
       System.arraycopy(data, 0, packetData, 1, data.length);
