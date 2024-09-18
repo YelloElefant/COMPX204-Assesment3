@@ -130,6 +130,8 @@ public class TftpClient {
                 System.exit(1);
             }
 
+            // args = new String[] { "/test.txt" };
+
             // parse arguments given
             ParseArgs(args);
 
@@ -237,9 +239,8 @@ public class TftpClient {
 
         // get where the file path starts as an index
         int indexOfStartOfFilePath = args[0].indexOf("/");
-        if (indexOfStartOfFilePath < 0) {
-            System.out.println("Invalid input");
-            return;
+        if (indexOfStartOfFilePath == -1) {
+            indexOfStartOfFilePath++;
         }
 
         // get serverAndPort and filePath as 2 strings
@@ -256,11 +257,9 @@ public class TftpClient {
         int fileNameStartIndex = filePath.lastIndexOf("/") + 1;
         // set filename and dir
         String dir = fileNameStartIndex > 1 ? filePath.substring(1, fileNameStartIndex) : "";
-        filename = fileNameStartIndex > 0 ? filePath.substring(fileNameStartIndex) : "";
-        filename = dir + filename;
-
-        // set server address from server string
-        serverAddress = InetAddress.getByName(server);
+        filename = filePath.substring(fileNameStartIndex);
+        System.out.println("Requesting file: " + filename);
+        filename = dir != "" ? dir + filename : filename;
 
         // set save location
         if (args.length == 2) {
@@ -272,11 +271,13 @@ public class TftpClient {
         }
 
         // tell user all set values (tell client the context for the program)
-        System.out.println("Requesting file: " + filename);
         System.out.println("Requesting file path: " + dir);
         System.out.println("Save location: " + saveLocation);
         System.out.println("Server: " + server);
         System.out.println("Port: " + port);
+
+        // set server address from server string
+        serverAddress = InetAddress.getByName(server);
     }
 
     /**
