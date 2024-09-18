@@ -1,7 +1,6 @@
 import java.net.DatagramPacket;
 import java.util.Arrays;
 import java.util.*;
-import java.io.*;
 
 public class TftpPacket {
    private byte type;
@@ -19,6 +18,13 @@ public class TftpPacket {
          7, new Exception("No such user."),
          8, new Exception("ACK violation."));
 
+   /**
+    * this gets the Exception from the error code in an error packet
+    *
+    * @return the Exception that corresponds to the error code
+    * @throws InvalidPacketException if the packet is not a valid error packet
+    * @see InvalidPacketException
+    */
    public Exception getError() throws InvalidPacketException {
       if (data.length == 1) {
          return errorCodes.get((int) data[0]);
@@ -27,6 +33,13 @@ public class TftpPacket {
 
    }
 
+   /**
+    * Constructor for a TFTP packet this takes a DatagramPacket and extracts the
+    * type, block number (if it exists) and data
+    * 
+    * @param p the DatagramPacket to extract the data from
+    * @see DatagramPacket
+    */
    public TftpPacket(DatagramPacket p) {
 
       this.type = p.getData()[0];
@@ -43,14 +56,29 @@ public class TftpPacket {
 
    }
 
+   /**
+    * gets the type of packet
+    * 
+    * @return the type of packet
+    */
    public byte getType() {
       return type;
    }
 
+   /**
+    * Get the block number of the packet
+    * 
+    * @return the block number of the packet
+    */
    public byte getBlockNumber() {
       return blockNumber;
    }
 
+   /**
+    * Get the data of the packet
+    * 
+    * @return the data of the packet
+    */
    public byte[] getData() {
       return data;
    }
