@@ -2,6 +2,7 @@ import java.io.*;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -118,19 +119,14 @@ public class TftpWorker extends Thread {
     * @param req    the request packet to process
     * @param number the id number of the worker
     */
-   public TftpWorker(DatagramPacket req, int id) {
+   public TftpWorker(DatagramPacket req, int id) throws InvalidPacketException, SocketException, SecurityException {
+      TftpPacket request = new TftpPacket(req);
       this.name += id;
 
-      byte type = req.getData()[0];
+      byte type = request.getType();
+      filename = new String(request.getData());
 
-      filename = new String(Arrays.copyOfRange(req.getData(), 1, req.getLength()));
-
-      try {
-         ds = new DatagramSocket();
-      } catch (Exception e) {
-         out("Error creating socket");
-         return;
-      }
+      ds = new DatagramSocket();
 
       clientAddress = req.getAddress();
       clientPort = req.getPort();

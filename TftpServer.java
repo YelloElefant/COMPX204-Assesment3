@@ -10,6 +10,16 @@ public class TftpServer {
       workers = edit;
    }
 
+   /**
+    * This is the main method for the TftpServer. It binds a new DatagramSocket to
+    * port 69 and listens for incoming packets. When a packet is received, a new
+    * TftpWorker is created to handle the packet and respond accordingly.
+    * whne a worker is created, it is added to the workers list and prints out the
+    * worker's information (Workers name, who it is servering and to what port,
+    * what port it is serving on and what file it is serving).
+    *
+    * @param args
+    */
    public static void main(String[] args) {
       int workerCounter = 0;
       try {
@@ -24,21 +34,24 @@ public class TftpServer {
 
             workerCounter = workers.size();
 
-            TftpWorker worker = new TftpWorker(p, workerCounter++);
+            try {
+               TftpWorker worker = new TftpWorker(p, workerCounter++);
 
-            System.out
-                  .println(worker.getLocalName() + " - serving " + p.getAddress().getHostAddress() + ":" + p.getPort()
-                        + " - on port " + worker.getPort() + " - for file " + worker.filename);
+               System.out.println(
+                     worker.getLocalName() + " - serving " + p.getAddress().getHostAddress() + ":" + p.getPort()
+                           + " - on port " + worker.getPort() + " - for file " + worker.filename);
 
-            workers.add(worker);
-            worker.start();
+               workers.add(worker);
+               worker.start();
+            } catch (Exception e) {
+               System.err.println("Error creating worker: " + e);
+            }
 
          }
       } catch (Exception e) {
          System.err.println("Exception: " + e);
       }
 
-      return;
    }
 
 }
