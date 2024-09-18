@@ -139,7 +139,6 @@ public class TftpWorker extends Thread {
 
             byte ackType = ackData[0];
             byte blockNumberClient = ackData[1];
-            out("ACK " + blockNumberClient + " received to block " + blockNumber);
 
             if (ackType != ACK) {
                out("Invalid ack");
