@@ -49,7 +49,7 @@ This is DATA packet ushally sent from the [server](#tftpserver), taking the form
 ### ACK
 This is an acknoledgement packet ushally sent by the [client](#tftpclient), taking the form `[TYPE, BLOCKNUMBER]`, the type for this packet is `3`, and the block number is the block number of the data packet just received
 ### ERROR
-This is a error packet sent when an error has occored and one side needs to tell the other about it, taking the form `[TYPE, ERRORCODE]`, type for this packet is `4`, and the error code is the error thrown (see [Error Codes](#Error Codes))
+This is a error packet sent when an error has occored and one side needs to tell the other about it, taking the form `[TYPE, ERRORCODE]`, type for this packet is `4`, and the error code is the error thrown see [Error Codes](#Error Codes)
 ## Error Codes
 List of error codes are:
 1. `File not found`
