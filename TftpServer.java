@@ -32,8 +32,6 @@ public class TftpServer {
          port = args[0].equals("") ? 69 : Integer.parseInt(args[0]);
       }
 
-      int workerCounter = 0;
-
       // create a new DatagramSocket to listen on the port number
       try {
          DatagramSocket ds = new DatagramSocket(port);
@@ -44,14 +42,17 @@ public class TftpServer {
             byte[] buf = new byte[1472];
             DatagramPacket p = new DatagramPacket(buf, 1472);
 
+            // remove any workers that have finished
+            workers.removeIf(worker -> !worker.isAlive());
+
             // receive a packet
             ds.receive(p);
 
-            workerCounter = workers.size();
+            int workerCounter = workers.size();
 
             // create a new worker to handle the packet received
             try {
-               TftpWorker worker = new TftpWorker(p, workerCounter++);
+               TftpWorker worker = new TftpWorker(p, workerCounter);
 
                System.out.println(
                      worker.getLocalName() + " - serving " + p.getAddress().getHostAddress() + ":" + p.getPort()
